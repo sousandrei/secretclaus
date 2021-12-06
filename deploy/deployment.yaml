@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: santa
+  namespace: santa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: santa
+  template:
+    metadata:
+      labels:
+        app: santa
+    spec:
+      containers:
+        - name: santa
+          image: "gcr.io/sousandrei/santa:latest"
+          imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: santa
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "250Mi"
+            limits:
+              cpu: "1"
+              memory: "500Mi"
