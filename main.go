@@ -24,6 +24,20 @@ func checkErr(err error) {
 	}
 }
 
+func removeDuplicateValues(slice []User) []User {
+	keys := make(map[string]bool)
+	list := []User{}
+
+	for _, entry := range slice {
+		if _, value := keys[entry.username]; !value {
+			keys[entry.username] = true
+			list = append(list, entry)
+		}
+	}
+
+	return list
+}
+
 func main() {
 	bot, err := tg.NewBotAPI(os.Getenv("BOT_TOKEN"))
 	checkErr(err)
@@ -65,6 +79,37 @@ func main() {
 
 			continue
 		}
+		if text == "/leave" {
+			if update.Message.Chat.Type != "private" {
+				msg := tg.NewMessage(cid, "Manda isso pro bot, nao no grupo")
+				msg.ReplyToMessageID = mid
+
+				_, err = bot.Send(msg)
+				checkErr(err)
+
+				continue
+			}
+
+			i := 0
+			for range users {
+				if users[i].username == from {
+					break
+				}
+				i++
+			}
+
+			users = append(users[:i], users[i+1:]...)
+
+			txt := fmt.Sprintf("%s te tirei da brincadeira %d", from, i)
+
+			msg := tg.NewMessage(cid, txt)
+			msg.ReplyToMessageID = mid
+
+			_, err = bot.Send(msg)
+			checkErr(err)
+
+			continue
+		}
 
 		if text == "/join" {
 			if update.Message.Chat.Type != "private" {
@@ -79,6 +124,7 @@ func main() {
 
 			user := User{from, cid}
 			users = append(users, user)
+			users = removeDuplicateValues(users)
 
 			txt := fmt.Sprintf("%s te botei na brincadeira", from)
 
